@@ -27,16 +27,48 @@ systemctl start docker
 
 # Set up project directory and fix permissions
 BASE_DIR="/root/OpenSOC"
-mkdir -p ${BASE_DIR}/vol/{thehive,cortex,elasticsearch,n8n/local-files,n8n/data}
+mkdir -p ${BASE_DIR}/vol/{thehive,cortex,elasticsearch,n8n,local-files}
 chown -R root:root ${BASE_DIR}/vol
 chmod -R 755 ${BASE_DIR}/vol
 
+# Fix permissions for Elasticsearch and N8N
+chown -R 1000:1000 ${BASE_DIR}/vol/elasticsearch
+chown -R 1000:1000 ${BASE_DIR}/vol/n8n
+
+# Add logback.xml for Cortex
+cat <<EOF > ${BASE_DIR}/vol/cortex/logback.xml
+<configuration>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+  <root level="INFO">
+    <appender-ref ref="STDOUT" />
+  </root>
+</configuration>
+EOF
+
+# Add logback.xml for TheHive
+cat <<EOF > ${BASE_DIR}/vol/thehive/logback.xml
+<configuration>
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+  <root level="INFO">
+    <appender-ref ref="STDOUT" />
+  </root>
+</configuration>
+EOF
+
 cd ${BASE_DIR}
 
-# Download the latest docker-compose.yml
+# Download latest docker-compose.yml
 curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/hello-urvesh/OpenSOC/main/docker-compose.yml
 
-# Create initial TheHive application.conf
+# Create TheHive application.conf
 cat <<EOF > ${BASE_DIR}/vol/thehive/application.conf
 play.http.secret.key="TheHiveSecretKey"
 
@@ -75,12 +107,12 @@ cortex {
 }
 EOF
 
-# Run containers
+# Start containers
 docker compose up -d
 
 # Wait for Cortex to be ready
 until curl -s http://localhost:9001 | grep -q "Cortex"; do
-  echo "[INFO] Waiting for Cortex..."
+  echo "[INFO] Waiting for Cortex to be ready..."
   sleep 5
 done
 
@@ -89,10 +121,10 @@ CORTEX_API_KEY=$(curl -s -XPOST http://localhost:9001/api/user/admin/token \
   -H 'Content-Type: application/json' \
   -d '{"password":"secret", "ttl": 0}' | jq -r '.token')
 
-# Inject Cortex API key into TheHive config
+# Inject Cortex key
 sed -i "s|__CORTEX_API_KEY__|$CORTEX_API_KEY|g" ${BASE_DIR}/vol/thehive/application.conf
 
-# Restart TheHive to load updated config
+# Restart TheHive to apply Cortex integration
 docker compose restart thehive
 
-echo "[DONE] TheHive + Cortex + N8N successfully deployed 🎉"
+echo "[DONE] TheHive + Cortex + N8N deployed successfully 🎉"

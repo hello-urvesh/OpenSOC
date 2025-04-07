@@ -15,6 +15,8 @@ services:
     image: strangebee/thehive:5.1
     environment:
       - JAVA_OPTS=-Xms512m -Xmx1024m
+    ports:
+      - "9000:9000"
     volumes:
       - ./vol/thehive:/etc/thehive
     networks:
@@ -26,6 +28,8 @@ services:
     image: thehiveproject/cortex:3.1
     environment:
       - JOB_DIRECTORY=/tmp/cortex-jobs
+    ports:
+      - "9001:9001"
     volumes:
       - ./vol/cortex:/etc/cortex
     networks:
@@ -33,47 +37,21 @@ services:
     depends_on:
       - elasticsearch
 
-  traefik:
-    image: traefik
-    command:
-      - --api.insecure=true
-      - --providers.docker=true
-      - --entrypoints.web.address=:80
-      - --entrypoints.websecure.address=:443
-      - --certificatesresolvers.myresolver.acme.tlschallenge=true
-      - --certificatesresolvers.myresolver.acme.email=user@example.com
-      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - traefik_data:/letsencrypt
-    networks:
-      - opensoc
-
   n8n:
     image: docker.n8n.io/n8nio/n8n
+    ports:
+      - "5678:5678"
     environment:
-      - N8N_HOST=n8n.example.com
       - N8N_PORT=5678
-      - N8N_PROTOCOL=https
+      - N8N_PROTOCOL=http
       - NODE_ENV=production
       - GENERIC_TIMEZONE=Europe/Berlin
     volumes:
       - ./vol/n8n:/home/node/.n8n
       - ./vol/local-files:/files
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.n8n.rule=Host(`n8n.example.com`)"
-      - "traefik.http.routers.n8n.entrypoints=websecure"
-      - "traefik.http.routers.n8n.tls.certresolver=myresolver"
     networks:
       - opensoc
     restart: always
-
-volumes:
-  traefik_data:
 
 networks:
   opensoc:

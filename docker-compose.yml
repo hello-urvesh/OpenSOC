@@ -1,0 +1,40 @@
+version: "3.7"
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.3
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 2g
+    ports:
+      - "9200:9200"
+    volumes:
+      - ./vol/elasticsearch:/usr/share/elasticsearch/data
+
+  thehive:
+    image: strangebee/thehive:5.1
+    depends_on:
+      - elasticsearch
+    ports:
+      - "9000:9000"
+    environment:
+      - JAVA_OPTS=-Xms1g -Xmx1g
+    volumes:
+      - ./vol/thehive:/etc/thehive
+
+  cortex:
+    image: thehiveproject/cortex:3.1
+    ports:
+      - "9001:9001"
+    environment:
+      - jobDirectory=/opt/cortex/jobs
+      - analyzerMaxTries=3
+      - analyzerMaxTime=600
+      - "cortexSecret=secret"
+    volumes:
+      - ./vol/cortex:/etc/cortex

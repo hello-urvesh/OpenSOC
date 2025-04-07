@@ -19,7 +19,7 @@ mkdir -p ${BASE_DIR}/vol/{thehive,cortex,elasticsearch}
 cd ${BASE_DIR}
 
 # Download docker-compose.yml from GitHub
-curl -o docker-compose.yml https://raw.githubusercontent.com/urveshthakkar/TheHive-Terraform/main/startup/docker-compose.yml
+curl -o docker-compose.yml https://raw.githubusercontent.com/hello-urvesh/OpenSOC/refs/heads/main/docker-compose.yml
 
 # Start TheHive + Cortex
 docker compose up -d

@@ -3,6 +3,7 @@ version: "3.7"
 services:
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.17.3
+    container_name: opensoc-elasticsearch-1
     environment:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
@@ -18,6 +19,7 @@ services:
 
   thehive:
     image: strangebee/thehive:5.1
+    container_name: opensoc-thehive-1
     depends_on:
       - elasticsearch
     ports:
@@ -29,6 +31,7 @@ services:
 
   cortex:
     image: thehiveproject/cortex:3.1
+    container_name: opensoc-cortex-1
     ports:
       - "9001:9001"
     environment:
@@ -38,3 +41,24 @@ services:
       - "cortexSecret=secret"
     volumes:
       - ./vol/cortex:/etc/cortex
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: opensoc-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_PORT=5678
+      - N8N_HOST=localhost
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - NODE_ENV=production
+      - GENERIC_TIMEZONE=Asia/Kolkata
+    volumes:
+      - ./vol/n8n/data:/home/node/.n8n
+      - ./vol/n8n/files:/files
+
+volumes:
+  n8n_data:
+  traefik_data:

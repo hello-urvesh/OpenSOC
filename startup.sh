@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "[START] Fully automated TheHive + Cortex + N8N setup"
+echo "[START] Fully automated TheHive + Cortex + N8N + Wazuh setup"
 
 # Update and install dependencies
 apt-get update -y
@@ -28,14 +28,16 @@ systemctl start docker
 # Set up project directory and fix permissions
 BASE_DIR="/root/OpenSOC"
 mkdir -p ${BASE_DIR}/vol/{thehive,cortex,elasticsearch,n8n,local-files}
+mkdir -p ${BASE_DIR}/vol/wazuh/{config,data}
+
 chown -R root:root ${BASE_DIR}/vol
 chmod -R 755 ${BASE_DIR}/vol
 
-# Fix permissions for Elasticsearch and N8N
+# Fix Elasticsearch and N8N permissions
 chown -R 1000:1000 ${BASE_DIR}/vol/elasticsearch
 chown -R 1000:1000 ${BASE_DIR}/vol/n8n
 
-# Add logback.xml for Cortex
+# Cortex logback.xml
 cat <<EOF > ${BASE_DIR}/vol/cortex/logback.xml
 <configuration>
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -49,7 +51,7 @@ cat <<EOF > ${BASE_DIR}/vol/cortex/logback.xml
 </configuration>
 EOF
 
-# Add logback.xml for TheHive
+# TheHive logback.xml
 cat <<EOF > ${BASE_DIR}/vol/thehive/logback.xml
 <configuration>
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -63,12 +65,11 @@ cat <<EOF > ${BASE_DIR}/vol/thehive/logback.xml
 </configuration>
 EOF
 
-cd ${BASE_DIR}
-
 # Download latest docker-compose.yml
+cd ${BASE_DIR}
 curl -fsSL -o docker-compose.yml https://raw.githubusercontent.com/hello-urvesh/OpenSOC/main/docker-compose.yml
 
-# Create TheHive application.conf
+# Create TheHive config
 cat <<EOF > ${BASE_DIR}/vol/thehive/application.conf
 play.http.secret.key="TheHiveSecretKey"
 
@@ -107,7 +108,7 @@ cortex {
 }
 EOF
 
-# Start containers
+# Start all containers
 docker compose up -d
 
 # Wait for Cortex to be ready
@@ -121,10 +122,10 @@ CORTEX_API_KEY=$(curl -s -XPOST http://localhost:9001/api/user/admin/token \
   -H 'Content-Type: application/json' \
   -d '{"password":"secret", "ttl": 0}' | jq -r '.token')
 
-# Inject Cortex key
+# Inject Cortex API key into TheHive config
 sed -i "s|__CORTEX_API_KEY__|$CORTEX_API_KEY|g" ${BASE_DIR}/vol/thehive/application.conf
 
-# Restart TheHive to apply Cortex integration
+# Restart TheHive for integration to apply
 docker compose restart thehive
 
-echo "[DONE] TheHive + Cortex + N8N deployed successfully 🎉"
+echo "[DONE] TheHive + Cortex + N8N + Wazuh deployed successfully 🎉"

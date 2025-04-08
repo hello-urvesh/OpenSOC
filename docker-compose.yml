@@ -8,12 +8,8 @@ services:
       - xpack.security.enabled=false
     volumes:
       - ./vol/elasticsearch:/usr/share/elasticsearch/data
-    user: "1000:1000"
-    ports:
-      - "9201:9200"  # TheHive Elasticsearch on 9201
     networks:
       - opensoc
-    restart: always
 
   thehive:
     image: strangebee/thehive:5.1
@@ -23,12 +19,10 @@ services:
       - "9000:9000"
     volumes:
       - ./vol/thehive:/etc/thehive
-      - ./vol/thehive/logback.xml:/etc/thehive/logback.xml
     networks:
       - opensoc
     depends_on:
       - elasticsearch
-    restart: always
 
   cortex:
     image: thehiveproject/cortex:3.1
@@ -38,12 +32,10 @@ services:
       - "9001:9001"
     volumes:
       - ./vol/cortex:/etc/cortex
-      - ./vol/cortex/logback.xml:/etc/cortex/logback.xml
     networks:
       - opensoc
     depends_on:
       - elasticsearch
-    restart: always
 
   n8n:
     image: docker.n8n.io/n8nio/n8n
@@ -53,51 +45,14 @@ services:
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
       - NODE_ENV=production
-      - GENERIC_TIMEZONE=Europe/Berlin
       - N8N_SECURE_COOKIE=false
+      - GENERIC_TIMEZONE=Europe/Berlin
     volumes:
       - ./vol/n8n:/home/node/.n8n
       - ./vol/local-files:/files
     networks:
       - opensoc
     restart: always
-
-  wazuh.manager:
-    image: wazuh/wazuh-manager:4.11.2
-    hostname: wazuh.manager
-    restart: always
-    ports:
-      - "1514:1514"
-      - "1515:1515"
-      - "55000:55000"
-    volumes:
-      - ./vol/wazuh/config:/etc/wazuh-manager
-      - ./vol/wazuh/data:/var/ossec/data
-    networks:
-      - opensoc
-
-  wazuh.indexer:
-    image: wazuh/wazuh-indexer:4.11.2
-    hostname: wazuh.indexer
-    restart: always
-    environment:
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=admin
-    ports:
-      - "9200:9200"  # Wazuh indexer stays on 9200
-    networks:
-      - opensoc
-
-  wazuh.dashboard:
-    image: wazuh/wazuh-dashboard:4.11.2
-    hostname: wazuh.dashboard
-    restart: always
-    environment:
-      - DASHBOARD_USERNAME=admin
-      - DASHBOARD_PASSWORD=SecretPassword
-    ports:
-      - "8443:443"
-    networks:
-      - opensoc
 
 networks:
   opensoc:

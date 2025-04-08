@@ -9,8 +9,11 @@ services:
     volumes:
       - ./vol/elasticsearch:/usr/share/elasticsearch/data
     user: "1000:1000"
+    ports:
+      - "9201:9200"  # TheHive Elasticsearch on 9201
     networks:
       - opensoc
+    restart: always
 
   thehive:
     image: strangebee/thehive:5.1
@@ -25,6 +28,7 @@ services:
       - opensoc
     depends_on:
       - elasticsearch
+    restart: always
 
   cortex:
     image: thehiveproject/cortex:3.1
@@ -39,6 +43,7 @@ services:
       - opensoc
     depends_on:
       - elasticsearch
+    restart: always
 
   n8n:
     image: docker.n8n.io/n8nio/n8n
@@ -78,7 +83,7 @@ services:
     environment:
       - OPENSEARCH_INITIAL_ADMIN_PASSWORD=admin
     ports:
-      - "9200:9200"
+      - "9200:9200"  # Wazuh indexer stays on 9200
     networks:
       - opensoc
 

@@ -5,7 +5,7 @@ echo "[START] Fully automated TheHive + Cortex + N8N + Wazuh setup"
 
 # Update and install dependencies
 apt-get update -y
-apt-get install -y ca-certificates curl gnupg lsb-release jq
+apt-get install -y ca-certificates curl gnupg lsb-release jq git
 
 # Add Docker’s official GPG key
 install -m 0755 -d /etc/apt/keyrings
@@ -108,7 +108,27 @@ cortex {
 }
 EOF
 
-# Start all containers
+# -------------------- WAZUH SETUP BEGINS --------------------
+
+echo "[WAZUH] Cloning Wazuh Docker repo..."
+cd ${BASE_DIR}
+git clone https://github.com/wazuh/wazuh-docker.git -b v4.11.2
+cd ${BASE_DIR}/wazuh-docker/single-node
+
+echo "[WAZUH] Generating certificates using official Wazuh certs-generator..."
+docker compose -f generate-indexer-certs.yml run --rm generator
+
+echo "[WAZUH] Fixing permissions on certs to avoid OpenSearch SSL errors..."
+chmod -R 644 ./config/wazuh_indexer_ssl_certs/*
+chown -R root:root ./config/wazuh_indexer_ssl_certs/
+
+echo "[WAZUH] Starting Wazuh stack..."
+docker compose up -d
+
+# -------------------- WAZUH SETUP ENDS ----------------------
+
+# Start TheHive, Cortex, N8N containers
+cd ${BASE_DIR}
 docker compose up -d
 
 # Wait for Cortex to be ready

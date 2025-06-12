@@ -1,9 +1,6 @@
 # OpenSOC Case Management
 
-This repository provides a minimal incident response case management tool built
-with **FastAPI** and **SQLModel**. It offers a simple web interface for creating
-cases and tracking tasks. Static assets such as stylesheets are served from the
-`opensoc/static` directory.
+
 
 ## Features
 - Create and list incident response cases

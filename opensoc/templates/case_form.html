@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>New Case</h1>
+<form method="post" action="/cases/new">
+  <div class="mb-3">
+    <label class="form-label">Title</label>
+    <input type="text" class="form-control" name="title" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Description</label>
+    <textarea class="form-control" name="description" rows="4"></textarea>
+  </div>
+  <button class="btn btn-primary" type="submit">Create</button>
+</form>
+{% endblock %}

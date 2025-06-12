@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+sqlmodel
+jinja2
+httpx<0.28
+python-multipart

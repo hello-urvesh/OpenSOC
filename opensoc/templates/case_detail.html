@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>{{ case.title }}</h1>
+<p>{{ case.description }}</p>
+<p>Status: <strong>{{ case.status }}</strong></p>
+<hr/>
+<h3>Tasks</h3>
+<ul class="list-group mb-3">
+  {% for task in tasks %}
+  <li class="list-group-item d-flex justify-content-between align-items-center">
+    {{ task.title }}
+    <span class="badge bg-secondary">{{ task.status }}</span>
+  </li>
+  {% endfor %}
+  {% if not tasks %}<li class="list-group-item">No tasks yet.</li>{% endif %}
+</ul>
+<form method="post" action="/cases/{{ case.id }}/tasks">
+  <div class="mb-3">
+    <label class="form-label">Task Title</label>
+    <input type="text" class="form-control" name="title" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Description</label>
+    <textarea class="form-control" name="description" rows="3"></textarea>
+  </div>
+  <button class="btn btn-primary" type="submit">Add Task</button>
+</form>
+{% endblock %}

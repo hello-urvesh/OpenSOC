@@ -15,7 +15,6 @@ pip install -r requirements.txt
 python -m opensoc
 ```
 
-The application will be available at [http://localhost:8000](http://localhost:8000).
 
 ## Tests
 Run unit tests with:
